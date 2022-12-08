@@ -4,6 +4,19 @@
 Many helpers for defining MOP protocols for API wrappers.
 ||#
 
+(defclass* ory ()
+  ((base-url
+    :accessor base-url
+    :initarg :base-url)
+   (api-key
+    :accessor api-key
+    :initarg :api-key
+    :type (or null string)))
+  (:default-initargs :bearer nil)
+  (:export-class-name-p t)
+  (:export-accessor-names-p t)
+  (:export-slot-names-p t))
+
 (defun replace-vars-for-slot-names (split slots)
   "Takes in a split list split by #\/ (url) produces a list of slot names"
   (mapcar (lambda (str)
@@ -106,27 +119,24 @@ used for creating slots in a class."
                 (list intern :accessor intern :initarg key)))
             slots)))
 
-(defgeneric generate-url (processor request)
+(defgeneric generate-url (ory request)
   (:documentation "Generate a request URL that is passed to Dex."))
 
-(defmethod generate-url (processor req)
+(defmethod generate-url (ory req)
   "Default URL generator."
   (with-accessors ((string-constructor string-constructor)
                    (query-constructor query-constructor))
       (class-of req)
     (concatenate 'string
-                 (base-url processor)
+                 (base-url ory)
                  (funcall string-constructor req)
                  (when query-constructor
                    (funcall query-constructor req)))))
 
-(defgeneric generate-dex-list (processor request)
+(defgeneric generate-dex-list (request)
   (:method-combination append :most-specific-last)
   (:documentation "Generate a list passed to dex using #'apply. Specialized by each 
 payment processor."))
-
-(defgeneric call-api (request)
-  (:documentation "Generic means of making per processor requests."))
 
 (defmacro wrap-dex-call (&body body)
   `(new-dex-response
@@ -135,8 +145,8 @@ payment processor."))
       (dexador:http-request-failed (c)
         c))))
 
-(defmethod %call-api (processor request)
-  "Call the API using PROCESSOR. Use an :around with your processor to establish restarts."
+(defun call-api (ory request)
+  "Call the API using ORY."
   (let ((url (generate-url processor request))
         (args (generate-dex-list processor request))
         (fun (request-fun request)))

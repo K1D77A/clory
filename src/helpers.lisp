@@ -1,15 +1,5 @@
 (in-package #:clory)
 
-(defgeneric to-array (ele)
-  (:documentation "Convert ELE to an array")
-  (:method ((str string))
-    (babel:string-to-octets str))
-  (:method ((str array))
-    str))
-
-(defun crc-raw (raw-body)
-  (ironclad:octets-to-integer (ironclad:digest-sequence :crc32 raw-body)))
-
 (defun in-list (obj)
   (if (listp obj)
       (first obj)

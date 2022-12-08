@@ -33,7 +33,6 @@ payment processor.
 (defmethod endpoint ((class clory-api-call))
   (in-list (slot-value class 'endpoint)))
 
-
 (defclass clory-api-slot (c2mop:slot-definition)
   ((as-string
     :accessor as-string
