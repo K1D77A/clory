@@ -21,17 +21,13 @@ APIs
     :accessor uri
     :initarg :uri)
    (stream 
-    :accessor dstream
+    :accessor estream
     :initarg :stream)
    (ory
     :accessor ory
     :initarg :ory
     :type ory
-    :documentation "The instance of class 'ory used to make the request.")
-   (ory-error-response
-    :accessor ory-error-response
-    :initarg :ory-error-response
-    :type ory-error-response))
+    :documentation "The instance of class 'ory used to make the request."))
   (:documentation "Signalled and populated when there is an error from Ory."))
 (c2mop:ensure-finalized (find-class 'ory-condition))
 
@@ -60,7 +56,7 @@ APIs
     :initarg :code
     :type (or null integer))
    (debug
-    :accessor cdebug
+    :accessor edebug
     :initarg :debug
     :type (or null string))
    (details
@@ -111,7 +107,7 @@ APIs
     :accessor uri
     :initarg :uri)
    (stream 
-    :accessor dstream
+    :accessor estream
     :initarg :stream)))
 (c2mop:ensure-finalized (find-class 'ory-response))
 

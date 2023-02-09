@@ -118,14 +118,6 @@ of the slot name when encoding in the Query string.")))
   ((request-fun :initform 'dex:patch))
   (:metaclass clory-api-call))
 
-(defclass response ()
-  ()
-  (:documentation "Top level response class"))
-
-(defclass api-failure ()
-  ()
-  (:documentation "API Failure superclass."))
-
 (defmethod print-object ((obj api-failure) stream)
   (print-unreadable-object (obj stream :type t :identity t)
     (format stream "~%")

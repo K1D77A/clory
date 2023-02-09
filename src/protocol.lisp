@@ -148,9 +148,7 @@ used for creating slots in a class."
     "application/json")
   (:method ((ct (eql :form)))
     "application/x-www-form-urlencoded"))
-  
-  
-
+    
 (defmacro wrap-dex-call (&body body)
     `(handler-case
         (multiple-value-list (locally ,@body))
