@@ -9,6 +9,7 @@
   :depends-on (#:dexador
                #:hu.dwim.defclass-star
                #:closer-mop
+               #:shasht
                #:str)
   :serial t
   :pathname "src"

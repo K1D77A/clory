@@ -7,12 +7,13 @@ Many helpers for defining MOP protocols for API wrappers.
 (defclass* ory ()
   ((base-url
     :accessor base-url
-    :initarg :base-url)
+    :initarg :base-url
+    :type string)
    (api-key
     :accessor api-key
     :initarg :api-key
+    :initform nil
     :type (or null string)))
-  (:default-initargs :bearer nil)
   (:export-class-name-p t)
   (:export-accessor-names-p t)
   (:export-slot-names-p t))
@@ -133,24 +134,65 @@ used for creating slots in a class."
                  (when query-constructor
                    (funcall query-constructor req)))))
 
-(defgeneric generate-dex-list (request)
+(defgeneric generate-dex-list (ory request)
   (:method-combination append :most-specific-last)
-  (:documentation "Generate a list passed to dex using #'apply. Specialized by each 
-payment processor."))
+  (:documentation "Generate a list passed to dex using #'apply.")
+  (:method append (ory request)
+    (list :headers (list (cons "Content-Type"
+                               (content-type-to-string (content-type request))))))
+  (:method append (ory (request request-with-content))
+    `(:content ,(content request))))
+
+(defgeneric content-type-to-string (ct)
+  (:method ((ct (eql :json)))
+    "application/json")
+  (:method ((ct (eql :form)))
+    "application/x-www-form-urlencoded"))
+  
+  
 
 (defmacro wrap-dex-call (&body body)
-  `(new-dex-response
-    (handler-case
+    `(handler-case
         (multiple-value-list (locally ,@body))
       (dexador:http-request-failed (c)
-        c))))
+        c)))
 
 (defun call-api (ory request)
   "Call the API using ORY."
-  (let ((url (generate-url processor request))
-        (args (generate-dex-list processor request))
+  (let ((url (generate-url ory request))
+        (args (generate-dex-list ory request))
         (fun (request-fun request)))
-    (construct-response-from-api processor
-                                 (wrap-dex-call 
-                                   (apply fun url args)))))
+    (construct-response-from-api 
+     (wrap-dex-call 
+       (apply fun url args)))))
 
+
+(defmacro defapi (name (endpoint super)
+                  &optional query-slots)
+  (let* ((slots (slots-from-url endpoint))
+         (names (mapcar #'first slots))
+         (query-slot-names (mapcar #'first query-slots)))
+    `(let ((class 
+             (defclass* ,name (,super)
+               ,(append slots query-slots)
+               ,@(append `((:metaclass clory-api-call)
+                           (:genned-slot-names ,names)
+                           (:query-slot-names ,query-slot-names)
+                           (:endpoint ,endpoint)))
+               (:export-class-name-p t)
+               (:export-accessor-names-p t))))
+       (c2mop:ensure-finalized class)
+       (let* ((direct-slots (c2mop:class-direct-slots class))
+              (direct-query-slots
+                (mapcar (lambda (slot-name)
+                          (find slot-name direct-slots
+                                :key #'c2mop:slot-definition-name
+                                :test #'string-equal))
+                        ',query-slot-names)))
+         (with-slots (string-constructor query-constructor)
+             class
+           (setf (string-constructor class) (gen-url-generator class))
+           (when ',query-slots
+             (setf (query-constructor class)
+                   (gen-query-generator direct-query-slots
+                                        ',query-slot-names))))))))

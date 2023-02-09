@@ -73,7 +73,8 @@ of the slot name when encoding in the Query string.")))
    (content-type
     :accessor content-type
     :initarg :content-type
-    :initform "application/json"))
+    :initform :JSON
+    :documentation "Used to determine how to encode certain data."))
   (:documentation "Top level request class")
   (:metaclass clory-api-call))
 
@@ -100,13 +101,13 @@ of the slot name when encoding in the Query string.")))
     :type list))
   (:metaclass clory-api-call))
 
-(defclass post-request (request-with-content)
+(defclass post-request%json (request-with-content)
   ((request-fun :initform 'dex:post))
   (:metaclass clory-api-call))
 
-(defclass post-files-request (post-request)
+(defclass post-request%form (post-request)
   ((content-type
-    :initform "multipart/related"))
+    :initform :form))
   (:metaclass clory-api-call))
 
 (defclass put-request (request-with-content)
