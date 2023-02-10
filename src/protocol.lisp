@@ -4,18 +4,21 @@
 Many helpers for defining MOP protocols for API wrappers.
 ||#
 
-(defparameter *ory* nil)
+(defparameter *ory* nil
+  "Top level instance of the class 'ory")
 
 (defclass* ory ()
   ((base-url
     :accessor base-url
     :initarg :base-url
-    :type string)
+    :type string
+    :documentation "The URL of the hydra instance.")
    (api-key
     :accessor api-key
     :initarg :api-key
     :initform nil
-    :type (or null string)))
+    :type (or null string)
+    :documentation "Currently unused."))
   (:export-class-name-p t)
   (:export-accessor-names-p t)
   (:export-slot-names-p t))
@@ -146,16 +149,17 @@ used for creating slots in a class."
     `(:content ,(content request))))
 
 (defgeneric content-type-to-string (ct)
+  (:documentation "CT is a keyword used to determine the http header Content-Type")
   (:method ((ct (eql :json)))
     "application/json")
   (:method ((ct (eql :form)))
     "application/x-www-form-urlencoded"))
     
 (defmacro wrap-dex-call (&body body)
-    `(handler-case
-        (multiple-value-list (locally ,@body))
-      (dexador:http-request-failed (c)
-        c)))
+  `(handler-case
+       (multiple-value-list (locally ,@body))
+     (dexador:http-request-failed (c)
+       c)))
 
 (defun call-api (ory request)
   "Call the API using ORY."
@@ -165,7 +169,6 @@ used for creating slots in a class."
     (construct-response-from-api 
      (wrap-dex-call 
        (apply fun url args)))))
-
 
 (defmacro defapi (name (endpoint super)
                   &optional query-slots)

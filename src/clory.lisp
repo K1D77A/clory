@@ -96,7 +96,7 @@
 (defapi oauth2/introspect ("/admin/oauth2/introspect" post-request%form)
         ())
 
-(defapi oauth2/token-delete ("/admin/oauth2/tokesn" delete-request)
+(defapi oauth2/token-delete ("/admin/oauth2/tokens" delete-request)
         ((client-id
           :as-string "client_id")))
 

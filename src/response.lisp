@@ -35,7 +35,7 @@ APIs
   ((error-debug
     :accessor error-debug
     :initarg :error-debug
-    :type string )
+    :type string)
    (error-name
     :accessor error-name
     :initarg :error-name
@@ -89,8 +89,11 @@ APIs
     :accessor redirect-to
     :initarg :redirect-to
     :type string)))
+(c2mop:ensure-finalized (find-class 'ory-redirect-to))
 
 (defun ory-error-class (status result)
+  "Using STATUS (http status code) and RESULT (hash table) attempt to determine what class
+the condition should be."
   (cond ((= status 410)
          'ory-redirect-to)
         ((gethash "message" result)
@@ -108,13 +111,16 @@ APIs
     :documentation "HTTP request body.")
    (headers
     :accessor headers
-    :initarg :headers)
+    :initarg :headers
+    :documentation "HTTP headers.")
    (uri
     :accessor uri
-    :initarg :uri)
+    :initarg :uri
+    :documentation "QURI Uri.")
    (stream 
     :accessor estream
-    :initarg :stream)))
+    :initarg :stream
+    :documentation "The connection stream if its kept alive. Currently always nil.")))
 (c2mop:ensure-finalized (find-class 'ory-response))
 
 (defmethod print-object ((obj ory-response) stream)
@@ -122,6 +128,8 @@ APIs
     (print-all-slots obj stream)))
 
 (defun determine-response-type (status result)
+  "Using STATUS (http status) and RESULT (hash table) return the class for the response
+should be."
   (cond ((<= 100 status 399)
          'ory-response)
         ((<= 400 status 599)
@@ -129,6 +137,8 @@ APIs
         (t 'ory-condition)))
          
 (defun construct-response-from-api (response)
+  "Given the RESPONSE (list) from an API call to Hydra, construct the final response and
+when its a condition signal it."
   (destructuring-bind (result status-code headers uri stream)
       response
     (let* ((response-type (determine-response-type status-code))
@@ -140,12 +150,17 @@ APIs
       (signal-when-condition response))))
  
 (defgeneric build-response (proto initargs)
+  (:documentation "Depending on class of PROTO build either a condition or an instance of
+a class.")
   (:method ((proto condition) initargs)    
     (apply #'make-condition (class-of proto) initargs))
   (:method (proto initargs)
     (apply #'make-instance (class-of proto) initargs)))
 
 (defgeneric construct-initargs-for-response (proto result status-code headers uri stream)
+  (:documentation "Construct a plist of initargs to create an instance of the class-of
+PROTO. Uses APPEND method in order to walk through the class hierarchy of PROTO in order
+to construct the list.")
   (:method-combination append :most-specific-last)
   (:method append (proto result status-code headers uri stream)
     (list :result (shasht:read-json result)
