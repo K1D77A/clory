@@ -101,7 +101,11 @@ of the slot name when encoding in the Query string.")))
     :type list))
   (:metaclass clory-api-call))
 
-(defclass post-request%json (request-with-content)
+(defclass post-request (request-with-content)
+  ((request-fun :initform 'dex:post))
+  (:metaclass clory-api-call))
+
+(defclass post-request%json (post-request)
   ((request-fun :initform 'dex:post))
   (:metaclass clory-api-call))
 
@@ -117,8 +121,3 @@ of the slot name when encoding in the Query string.")))
 (defclass patch-request (request-with-content)
   ((request-fun :initform 'dex:patch))
   (:metaclass clory-api-call))
-
-(defmethod print-object ((obj api-failure) stream)
-  (print-unreadable-object (obj stream :type t :identity t)
-    (format stream "~%")
-    (print-all-slots obj stream)))

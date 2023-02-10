@@ -4,6 +4,8 @@
 Many helpers for defining MOP protocols for API wrappers.
 ||#
 
+(defparameter *ory* nil)
+
 (defclass* ory ()
   ((base-url
     :accessor base-url

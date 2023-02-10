@@ -84,12 +84,18 @@ APIs
     :type (or null string))))
 (c2mop:ensure-finalized (find-class 'ory-generic-error))
 
-(defun ory-error-class-prototype (result)
-  (c2mop:class-prototype (find-class 
-                          (if (gethash "message" result)
-                              'ory-generic-error
-                              'ory-default-error))))
+(define-condition ory-redirect-to (ory-condition)
+  ((redirect-to
+    :accessor redirect-to
+    :initarg :redirect-to
+    :type string)))
 
+(defun ory-error-class (status result)
+  (cond ((= status 410)
+         'ory-redirect-to)
+        ((gethash "message" result)
+         'ory-generic-error)
+        (t 'ory-default-error)))
  
 (defclass* ory-response ()
   ((status-code
@@ -115,11 +121,11 @@ APIs
   (print-unreadable-object (obj stream :type t :identity t)
     (print-all-slots obj stream)))
 
-(defun determine-response-type (status)
+(defun determine-response-type (status result)
   (cond ((<= 100 status 399)
          'ory-response)
         ((<= 400 status 599)
-         'ory-error-condition)
+         (ory-error-class status result))
         (t 'ory-condition)))
          
 (defun construct-response-from-api (response)
@@ -174,7 +180,9 @@ APIs
             :message mes
             :reason re
             :request req
-            :status sta))))
+            :status sta)))
+  (:method append ((proto ory-redirect-to) result status-code headers uri stream)
+    (list :redirect-to (gethash "redirect_to" result))))
             
 (defun signal-when-condition (c)
   "Signals a condition when C is a condition."
