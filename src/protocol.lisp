@@ -33,7 +33,7 @@ Many helpers for defining MOP protocols for API wrappers.
           split))
 
 (defun gen-url-generator (class)
-  "Compiles a function for CLASS that when called with the request object. When evaluated
+  "Compiles a function for CLASS that when evaluated
 the function returns a string with specific slots values written into a string."
   (with-accessors ((endpoint endpoint)
                    (genned-slot-names genned-slot-names))

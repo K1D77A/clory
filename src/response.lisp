@@ -141,9 +141,10 @@ should be."
 when its a condition signal it."
   (destructuring-bind (result status-code headers uri stream)
       response
-    (let* ((response-type (determine-response-type status-code))
+    (let* ((parsed (shasht:read-json result))
+           (response-type (determine-response-type status-code parsed))
            (response-proto (c2mop:class-prototype (find-class response-type)))
-           (response-inits (construct-initargs-for-response response-proto result
+           (response-inits (construct-initargs-for-response response-proto parsed
                                                             status-code headers
                                                             uri stream))
            (response (build-response response-proto response-inits)))
@@ -163,7 +164,7 @@ PROTO. Uses APPEND method in order to walk through the class hierarchy of PROTO 
 to construct the list.")
   (:method-combination append :most-specific-last)
   (:method append (proto result status-code headers uri stream)
-    (list :result (shasht:read-json result)
+    (list :result result
           :status-code status-code
           :headers headers
           :uri uri
